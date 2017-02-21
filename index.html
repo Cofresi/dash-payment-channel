@@ -1,0 +1,245 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <title>DASH Payment Service Test</title>
+
+    <link rel='shortcut icon' type='image/x-icon' href='favicon.ico'/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/smoothness/jquery-ui.css">
+    <script src="https://dev-test.dash.org:3001/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.0.js" integrity="sha256-slogkvB1K3VOkzAI8QITxV3VzpOnkeNVsKvtkYLMjfk=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="js/bundle.js"></script>
+
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/master.css">
+
+    <script type="text/javascript">
+
+
+        $(document).ready(function(){
+
+            window.network = 'testnet';
+
+            jQuery('#btn-consumer').click(function (event) {
+                event.preventDefault();;
+                window.createConsumerKeys();
+                jQuery('#btn-consumer').prop('disabled', true);
+                $('#tabs-demo a[href="#panel-consumer"]').tab('show');
+            });
+            jQuery('#btn-provider').click(function (event) {
+                event.preventDefault();
+                window.createProviderKey();
+                jQuery('#btn-provider').prop('disabled', true);
+                $('#tabs-demo a[href="#panel-provider"]').tab('show');
+            });
+            jQuery('#btn-channel').click(function (event) {
+                event.preventDefault();
+                window.createPaymentChannel();
+                jQuery('#btn-channel').prop('disabled', true);
+                $('#tabs-demo a[href="#panel-unsigned-refund"]').tab('show');
+            });
+            jQuery('#btn-channel').click(function (event) {
+                event.preventDefault();
+                window.createPaymentChannel();
+                $('#tabs-demo a[href="#panel-unsigned-refund"]').tab('show');
+            });
+            jQuery('#btn-refund').click(function (event) {
+                event.preventDefault();
+                window.signRefund();
+                jQuery('#btn-refund').prop('disabled', true);
+                $('#tabs-demo a[href="#panel-signed-refund"]').tab('show');
+            });
+            jQuery('#btn-commitment').click(function (event) {
+                event.preventDefault();
+                window.broadcastCommitment();
+                jQuery('#btn-commitment').prop('disabled', true);
+                $('#tabs-demo a[href="#panel-broadcast-commitment"]').tab('show');
+            });
+            jQuery('#btn-payment1').click(function (event) {
+                event.preventDefault();
+                $('#tabs-demo a[href="#panel-payment1"]').tab('show');
+            });
+            jQuery('#btn-check-payment1').click(function (event) {
+                event.preventDefault();
+                $('#tabs-demo a[href="#panel-check-payment1"]').tab('show');
+            });
+            jQuery('#btn-resend').click(function (event) {
+                event.preventDefault();
+                $('#tabs-demo a[href="#panel-resend"]').tab('show');
+            });
+
+
+        });
+
+
+    </script>
+
+</head>
+<body>
+
+<div class="container-fluid">
+
+    <div class="row" id="header">
+        <div class="col-md-2">
+            <img id="dash_logo" src="images/dash_logo.png" alt="dash backend tools">
+            <div class="row">
+                <div class="col-xs-12">
+                    <h4><i>Backend Tools</i></h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12">
+            DASH Payment Channel
+        </div>
+    </div>
+
+
+    <div class="row top-buffer">
+
+
+        <div class="col col-md-2">
+            <label for="btn-group1">Action Steps</label>
+            <div id="btn-group1" class="btn-group btn-group-vertical">
+
+                <button id="btn-consumer" class="btn btn-default text-left" type="button">
+                    Step 0: Prepare Consumer
+                </button>
+                <button id="btn-provider" class="btn btn-default text-left" type="button">
+                    Step 0: Prepare Provider
+                </button>
+                <button id="btn-channel" class="btn btn-default text-left" type="button">
+                    Step 1: Create Channel
+                </button>
+                <button id="btn-refund" class="btn btn-default text-left" type="button">
+                    Step 2: Sign Refund
+                </button>
+                <button id="btn-commitment" class="btn btn-default text-left" type="button">
+                    Step 3: Broadcast Commitment
+                </button>
+                <button id="btn-payment1" class="btn btn-default text-left" type="button">
+                    Step 4: First Payment
+                </button>
+                <button id="btn-check-payment1" class="btn btn-default text-left" type="button">
+                    Step 5: Check Payment
+                </button>
+                <button id="btn-resend" class="btn btn-default text-left" type="button">
+                    Step 6: Resend As Funds
+                </button>
+            </div>
+        </div>
+
+        <div class="col col-md-7">
+            <div class="tabbable" id="tabs-demo">
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="#panel-consumer" data-toggle="tab">Consumer Keys</a>
+                    </li>
+                    <li>
+                        <a href="#panel-provider" data-toggle="tab">Provider Keys</a>
+                    </li>
+                    <li>
+                        <a href="#panel-unsigned-refund" data-toggle="tab">Unsigned Refund</a>
+                    </li>
+                    <li>
+                        <a href="#panel-signed-refund" data-toggle="tab">Signed Refund</a>
+                    </li>
+                    <li>
+                        <a href="#panel-commitment" data-toggle="tab">Commitment</a>
+                    </li>
+                    <li>
+                        <a href="#panel-broadcast-commitment" data-toggle="tab">Broadcast Commitment</a>
+                    </li>
+                    <li>
+                        <a href="#panel-payment1" data-toggle="tab">First Payment</a>
+                    </li>
+                    <li>
+                        <a href="#panel-check-payment1" data-toggle="tab">Check Payment</a>
+                    </li>
+                    <li>
+                        <a href="#panel-resend" data-toggle="tab">Resend As Funds</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <div class="tab-pane active" id="panel-consumer">
+                        <label for="text-consumer">Consumer:</label>
+                        <textarea class="form-control" id="text-consumer" rows="15" placeholder="nothing yet..."></textarea>
+                    </div>
+                    <div class="tab-pane" id="panel-provider">
+                        <label for="text-provider">Provider:</label>
+                        <textarea class="form-control" id="text-provider" rows="15" placeholder="nothing yet..."></textarea>
+                    </div>
+                    <div class="tab-pane" id="panel-unsigned-refund">
+                        <label for="text-unsigned-refund">Unsigned Refund:</label>
+                        <textarea class="form-control" id="text-unsigned-refund" rows="15" placeholder="nothing yet..."></textarea>
+                    </div>
+                    <div class="tab-pane" id="panel-signed-refund">
+                        <label for="text-signed-refund">Signed Refund:</label>
+                        <textarea class="form-control" id="text-signed-refund" rows="15" placeholder="nothing yet..."></textarea>
+                    </div>
+                    <div class="tab-pane" id="panel-commitment">
+                        <label for="text-commitment">Commitment Tx:</label>
+                        <textarea class="form-control" id="text-commitment" rows="15" placeholder="nothing yet..."></textarea>
+                    </div>
+                    <div class="tab-pane" id="panel-broadcast-commitment">
+                        <label for="text-broadcast-commitment">Broadcast Commitment:</label>
+                        <textarea class="form-control" id="text-broadcast-commitment" rows="15" placeholder="nothing yet..."></textarea>
+                    </div>
+                    <div class="tab-pane" id="panel-payment1">
+                        <label for="text-payment1">First Payment:</label>
+                        <textarea class="form-control" id="text-payment1" rows="15" placeholder="nothing yet..."></textarea>
+                    </div>
+                    <div class="tab-pane" id="panel-check-payment1">
+                        <label for="text-check-payment1">Check Payment:</label>
+                        <textarea class="form-control" id="text-check-payment1" rows="15" placeholder="nothing yet..."></textarea>
+                    </div>
+                    <div class="tab-pane" id="panel-resend">
+                        <label for="text-resend">Resend As Funds:</label>
+                        <textarea class="form-control" id="text-resend" rows="15" placeholder="nothing yet..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-2 col-md-2 ">
+            <div id="side-header">
+                <div class="col-xs-12">
+                    <div>
+                        <h3 class="header_title">Payment Channel<br/>Flow Demo</h3>
+                        <p id="side_header_description" class="header_description">The DASH Payment Channel Demo tries to illustrate how a pament channel can be set up and used between a customer and a merchant, or just two random people wanting to exchange micro-transactions off chain in a P2P manner.</p>
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <div class="row top-buffer">
+        <div class="col col-md-7 col-md-offset-2">
+            <label for="demoText">Step by Step Instructions:</label>
+            <textarea class="form-control" id="demoText" rows="3" placeholder="Prepare Consumer"></textarea>
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+</body>
+</html>
