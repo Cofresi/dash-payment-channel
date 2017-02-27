@@ -2,10 +2,11 @@
 
 var assert = require('assert');
 var bitcore = require('bitcore-lib-dash');
+var paymentChannel = require('bitcore-channel-dash');
 var PrivateKey = bitcore.PrivateKey;
-var Consumer = require('../../../lib/Consumer');
-var Provider = require('../../../lib/Provider');
-var Commitment = require('../../../lib/transactions/Commitment');
+var Consumer = paymentChannel.Consumer;
+var Provider = paymentChannel.Provider;
+var Commitment = paymentChannel.transactions.Commitment;
 var consumer = null;
 var provider = null;
 var refundKey = null;

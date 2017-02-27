@@ -1,7 +1,7 @@
 {
   "name": "dash-payment-channel",
   "version": "1.0.0",
-  "description": "bitore-channel-dash demo site",
+  "description": "Demo Site for bitore-channel-dash",
   "main": "index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -12,12 +12,17 @@
   },
   "keywords": [
     "bitcore",
-    "payment",
-    "channel",
+    "bitcore channel",
+    "payment channel",
     "DASH",
+    "DASH payment channel",
     "bitcoin",
     "lightning"
   ],
+  "dependencies": {
+    "bitcore-lib-dash": "0.13.19",
+    "bitcore-channel-dash": "Cofresi/bitcore-channel-dash"
+  },
   "author": "Cofresi",
   "license": "ISC",
   "bugs": {
