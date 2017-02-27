@@ -1,0 +1,27 @@
+{
+  "name": "dash-payment-channel",
+  "version": "1.0.0",
+  "description": "bitore-channel-dash demo site",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cofresi/dash-payment-channel.git"
+  },
+  "keywords": [
+    "bitcore",
+    "payment",
+    "channel",
+    "DASH",
+    "bitcoin",
+    "lightning"
+  ],
+  "author": "Cofresi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Cofresi/dash-payment-channel/issues"
+  },
+  "homepage": "https://github.com/Cofresi/dash-payment-channel#readme"
+}
