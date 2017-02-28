@@ -20,8 +20,9 @@
     "lightning"
   ],
   "dependencies": {
-    "bitcore-lib-dash": "0.13.19",
-    "bitcore-channel-dash": "Cofresi/bitcore-channel-dash"
+    "bitcore-lib-dash": "^0.13.20",
+    "bitcore-channel-dash": "Cofresi/bitcore-channel-dash",
+    "bitcore-explorers-dash": "Cofresi/bitcore-explorers-dash"
   },
   "author": "Cofresi",
   "license": "ISC",

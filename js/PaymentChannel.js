@@ -1,222 +1,21 @@
 'use strict';
 
-var assert = require('assert');
+var Insight = require('bitcore-explorers-dash').Insight;
 var bitcore = require('bitcore-lib-dash');
 var paymentChannel = require('bitcore-channel-dash');
 var PrivateKey = bitcore.PrivateKey;
 var Consumer = paymentChannel.Consumer;
 var Provider = paymentChannel.Provider;
-var Commitment = paymentChannel.transactions.Commitment;
-var consumer = null;
-var provider = null;
-var refundKey = null;
-var fundingKey = null;
+var Commitment = paymentChannel.Transactions.Commitment;
+
 var commitmentKey = null;
 var providerKey = null;
 var network = 'testnet';
 var socket=null;
-//var socketurl="https://dev-test.dash.org:3001";
-//var insightapi='https://dev-test.dash.org';
-var socketurl="http://195.141.143.51:3001";
-var insightapi='http://195.141.143.51';
 var messageFromProvider;
 var commitmentTx;
-var paymentAddress = 'yMnEpq16VHPPmxnttkD28m6VfdRFdpp8Uq';
 var providerPublicKey;
 var signedRefund;
-
-//TODO set up package.json to import node.js libs
-
-
-    window.createPaymentChannel = function() {
-        var self = this;
-
-        this.providerPublicKey = this.provider.getPublicKey();
-
-        console.log('funding key: ' + this.refundKey.toString());
-        console.log('refund key: ' + this.fundingKey.toString());
-        console.log('commitment key: ' + this.commitmentKey.toString());
-        console.log('provider key: ' + this.providerKey.toString());
-        console.log('provider getPublicKey: ' + this.provider.getPublicKey());
-
-
-        this.consumer = new Consumer({
-            fundingKey: this.fundingKey,
-            refundKey: this.refundKey,
-            refundAddress: this.refundKey.toAddress(),
-            commitmentKey: this.commitmentKey,
-            providerPublicKey: this.providerPublicKey,
-            providerAddress: this.providerKey.toAddress()
-        });
-
-        var demoText = 'Now send DASH to ' + this.consumer.fundingAddress.toString() + ' to fund the channel';
-        $('#demoText').text(demoText + '\n');
-        console.info(demoText);
-
-        self.initSocket(this.consumer.fundingAddress.toString())
-
-        return true;
-
-    };
-
-
-window.processFunding = function() {
-    var self = this;
-    var consumer = this.consumer
-    if(!consumer){
-        console.log("consumer not initialised");
-        return false;
-    }
-
-    console.log('get UTXO');
-    self.getUTXO(consumer.fundingAddress, function(err, utxos) {
-
-        if(err) {
-            console.log("err: " + err.toString());
-            return false;
-        }
-
-        console.log("utxos: " + utxos);
-
-        console.log("processing funding...");
-        consumer.processFunding(utxos);
-        consumer.commitmentTx._updateChangeOutput();
-        //fs.writeFileSync('unsigned.refund.log', consumer.setupRefund().toJSON());
-
-        //this.refundMessage = consumer.setupRefund().toString();
-        console.log("consumer.setupRefund().toString()" + consumer.setupRefund().toString());
-        $('#text-unsigned-refund').text(consumer.setupRefund().toString());
-
-        commitmentTx = consumer.commitmentTx.toString();
-        console.log("consumer.commitmentTx.toString()" + consumer.commitmentTx.toString());
-        $('#text-commitment').text(consumer.commitmentTx.toString());
-        //fs.writeFileSync('commitment.log', consumer.commitmentTx.toJSON());
-
-
-        var messageToProvider = consumer.setupRefund();
-        console.log("Refund message for provider to sign: " + messageToProvider);
-
-        var demoText = 'The provider can now sign the refund message';
-        $('#demoText').text(demoText + '\n');
-        console.info(demoText);
-        return true;
-
-    });
-
-};
-
-
-    window.createProviderKey = function() {
-        var self = this;
-
-        if (this.network === 'testnet') {
-            this.providerKey = new bitcore.PrivateKey(bitcore.Networks.testnet);
-        }
-        else if (this.network === 'mainnet') {
-            this.providerKey = new bitcore.PrivateKey(bitcore.Networks.mainnet);
-        }
-        else {
-            console.log('no network set');
-            return false;
-        }
-
-        $('#text-provider').text('provider key: ' + this.providerKey.toString() + '\n');
-        console.log('provider key: ' + this.providerKey.toString());
-
-
-        //create provider
-
-        this.provider = new Provider({
-            network: this.network,
-            paymentAddress: this.paymentAddress
-        });
-        console.info('Share this public key with potential consumers: ' + this.provider.getPublicKey());
-        $('#text-provider').append('Share this public key with potential consumers: ' + this.provider.getPublicKey() + '\n');
-
-
-        var demoText = 'Now the consumer can set up a payment channel';
-        $('#demoText').text(demoText + '\n');
-
-        return true;
-
-    };
-
-window.signRefund = function() {
-    var self = this;
-
-    //var refundMessage = this.refundMessage;
-    var provider = this.provider;
-    if(!provider){
-        console.log("provider not initialised");
-        return false;
-    }
-    var consumer = this.consumer;
-    if(!consumer){
-        console.log("consumer not initialised");
-        return false;
-    }
-
-    console.log("consumer.setupRefund().toString()" + consumer.setupRefund().toString());
-
-    var messageToConsumer = provider.signRefund(consumer.setupRefund().toJSON());
-    this.signedRefund = messageToConsumer;
-
-
-    $('#text-signed-refund').text(messageToConsumer + '\n');
-    console.log('messageToConsumer: ' + messageToConsumer);
-
-    var demoText = 'Now consumer verify signed refund message';
-    $('#demoText').text(demoText + '\n');
-
-    return true;
-
-};
-
-
-    window.broadcastCommitment = function() {
-        var self = this;
-
-        var consumer = this.consumer;
-        if(!consumer){
-            console.log("consumer not initialised");
-            return false;
-        }
-        var provider = this.provider;
-        if(!provider){
-            console.log("provider not initialised");
-            return false;
-        }
-
-        console.log("signed Refund: " + this.signedRefund);
-        console.log("provider.signRefund: " + provider.signRefund(consumer.setupRefund().toJSON()));
-
-       // if (consumer.validateRefund(this.signedRefund.toJSON())) {
-            var demoText = 'Signed refund message successfully validated. Now consumer can broadcast commitment and start sending payments...';
-            console.log(demoText);
-            $('#demoText').text(demoText + '\n');
-
-            if (consumer.commitmentTx.isFullySigned()) {
-
-                self.broadcastTx(consumer.commitmentTx.toString(), function (err, txid) {
-
-                    if (err) {
-                        console.log("err: " + err.toString());
-                        return false;
-                    }
-
-                    console.log("commitment txid : " + txid);
-                    return true;
-
-                });
-
-            }
-
-     //   } else {
-     //       console.log('refund validation error');
-     //   }
-
-    };
-
 
     window.createConsumerKeys = function() {
         var self = this;
@@ -246,145 +45,443 @@ window.signRefund = function() {
 
     };
 
-window.initSocket = function(address) {
-    var self = this;
+    window.createPaymentChannel = function() {
+        var self = this;
 
-    this.socket = io(socketurl);
-    var socket = this.socket;
-    console.log ('socket: ' + socket)
+        this.providerPublicKey = this.provider.getPublicKey();
 
+        console.log('funding private key: ' + this.refundKey.toString());
+        console.log('refund private key: ' + this.fundingKey.toString());
+        console.log('commitment private key: ' + this.commitmentKey.toString());
+        console.log('provider private key: ' + this.providerKey.toString());
+        console.log('provider getPublicKey: ' + this.provider.getPublicKey());
+        console.log('provider payment address: ' + this.provider.paymentAddress.toString());
 
-    console.log("-socketio-");
-    console.log("listening to: " + address);
-
-    if (address) {
-        var address = address;
-    } else {
-        return false; // inactive socket status
-    }
-
-    console.log('trying to connect to ' + this.socketurl + '...' );
-
-    socket.on('connect', function() {
-        //socket.emit('subscribe', 'txlock');
-        socket.emit('subscribe', 'bitcoind/addresstxid', [ address ]);
-    });
-
-/*
-    socket.on('txlock', function(data) {
-        console.log('txlock: '+ data);
-
-        // TODO - extend bitcoind/addresstxlockid ?
-
-        // or just filter it out to only relate to 'address'
-
-    });
-    */
-
-    socket.on('bitcoind/addresstxid', function(data) {
-        console.log('addresstxid: '+ data.txid);
-
-        // now poll for transaction
-
-        var txid = data.txid;
-        self.processFunding();
-        /*
-        self.getTx(txid, function(err, res) {
-
-            console.log(res);
-
-            var config = {
-                transactionOpts: {
-                    confirmations: 1,
-                    pendingNotificationInterval: 5,
-                    pollingInterval: 2000
-                }
-            };
-
-            self.verifyTransaction(config.transactionOpts, txid);
-
+        // if using testnet be careful not to forget to construct consumer with the network option, otherwise there will be a mismatch of addresses validating the refund Tx (in consumer.js Consumer.prototype.validateRefund)
+        this.consumer = new Consumer({
+            fundingKey: this.fundingKey,
+            refundKey: this.refundKey,
+            refundAddress: this.refundKey.toAddress(),
+            commitmentKey: this.commitmentKey,
+            providerPublicKey: this.providerPublicKey,
+            providerAddress: this.provider.paymentAddress,
+            network: network
         });
-        */
 
-    });
+        var demoText = 'Now that both provider and consumer are set up and we have instantiated our consumer object, we have two ways of funding the channel. The basic one is to send DASH to an address that is provided by the Consumer instance (a private key had been created for this purpose in Step 0. prepare Consumer).';
+        demoText = demoText + '\n' + 'To continue, send any amount of tDASH to ' + this.consumer.fundingAddress.toString() + ' to fund the channel';
+        $('#demoText').text(demoText + '\n');
+        console.info(demoText);
 
-    return true; // active socket status
+        self.initSocket(this.consumer.fundingAddress.toString())
+
+        return true;
+
+    };
+
+
+
+    window.createProviderKey = function() {
+        var self = this;
+
+        if (this.network === 'testnet') {
+            this.providerKey = new bitcore.PrivateKey(bitcore.Networks.testnet);
+        }
+        else if (this.network === 'mainnet') {
+            this.providerKey = new bitcore.PrivateKey(bitcore.Networks.mainnet);
+        }
+        else {
+            console.log('no network set');
+            return false;
+        }
+
+        $('#text-provider').text('provider key: ' + this.providerKey.toString() + '\n');
+        console.log('provider private key: ' + this.providerKey.toString());
+
+
+        //create provider
+        //console.log('this.paymentAddress: ' + this.paymentAddress);
+
+
+
+        this.provider = new Provider({
+            network: network
+        });
+
+        var paymentAddress = this.provider.getPublicKey().toAddress(this.network);
+        this.provider.paymentAddress = paymentAddress;
+        console.log('provider payment address: ' + paymentAddress);
+
+
+            console.info('Share this public key with potential consumers: ' + this.provider.getPublicKey());
+        $('#text-provider').append('Share this public key with potential consumers: ' + this.provider.getPublicKey() + '\n');
+
+
+        var demoText = 'Now the consumer can set up a payment channel';
+        $('#demoText').text(demoText + '\n');
+
+        return true;
+
+    };
+
+    window.signRefund = function() {
+        var self = this;
+
+        //var refundMessage = this.refundMessage;
+        var provider = this.provider;
+        if(!provider){
+            console.log("provider not initialised");
+            return false;
+        }
+        var consumer = this.consumer;
+        if(!consumer){
+            console.log("consumer not initialised");
+            return false;
+        }
+
+        console.log("consumer.setupRefund().toString()" + consumer.setupRefund().toString());
+
+        var messageToConsumer = provider.signRefund(consumer.setupRefund().toJSON());
+        this.signedRefund = messageToConsumer;
+
+
+        $('#text-signed-refund').text(messageToConsumer + '\n');
+        console.log('messageToConsumer: ' + messageToConsumer);
+
+
+        var demoText = 'The refund transaction has been signed by the merchant and sent back to the consumer.';
+        demoText = demoText + '\n' + 'The consumer should now verify the signed refund Tx from the merchant, before starting to make the first payment';
+        $('#demoText').text(demoText + '\n');
+
+        return true;
+
 };
 
-window.verifyTransaction = function(opts, txid) {
-    var self = this;
 
-    var i = 0;
+    window.broadcastCommitment = function() {
+        var self = this;
+        var consumer = this.consumer;
 
-    transactionPending(opts);
+        if(!consumer){
+            console.log("consumer not initialised");
+            return false;
+        }
+        var provider = this.provider;
+        if(!provider){
+            console.log("provider not initialised");
+            return false;
+        }
 
-    var refreshId = setInterval( function() {
-        console.log('polling...');
+        console.log("signed Refund: " + this.signedRefund);
+        console.log("provider.signRefund: " + provider.signRefund(consumer.setupRefund().toJSON()));
 
-        self.getTx(txid, function(err, res) {
 
-            console.log(res);
+        if (consumer.validateRefund(this.signedRefund.toJSON())) {
+            var demoText = 'Signed refund message successfully validated.' + '\n' + consumer.refundTx.toJSON().outputs[0].script + '\n';
+            var demoText = demoText + 'Now consumer can broadcast commitment and start sending payments...';
+            console.log(demoText);
+            $('#demoText').text(demoText + '\n');
 
-            var conf = parseInt(res.confirmations);
-            var txlock = res.txlock;
-            console.log("txlock: " + txlock);
+            var insight = new Insight(self.socketurl, this.network);
 
-            if (txlock) {
-                clearInterval(refreshId);;
-            }
-
-            if (conf > 0) {
-
-                if (i < opts.pendingNotificationInterval) {
-                    i++;
+            insight.broadcast(consumer.commitmentTx, function(err, txid) {
+                if (err) {
+                    console.log('Error broadcasting');
                 } else {
-
-                    // TODO - update eCommerce database with confirmation ?
-
-                    transactionPending(res);
-                    i = 0;
+                    console.log('commitment Tx ' + consumer.commitmentTx);
+                    console.log('broadcasted as' + txid);
+                    $('#text-broadcast-commitment').text(consumer.commitmentTx + '\n');
+                    $('#text-broadcast-commitment').append('broadcasted as', txid);
                 }
+            });
 
-                if(res.txlock == 'true') {
 
-                    console.log('txlock detected for txid: ' + res.txid);
-                    console.log(res);
 
+        } else {
+            console.log('refund validation error');
+        }
+
+    };
+
+
+    window.pay = function(duffs) {
+        var self = this;
+        var consumer = self.consumer;
+
+        console.log('increment payment with ' + duffs + ' duffs');
+
+        if(consumer.commitmentTx.isFullySigned()) {
+
+            console.log('consumer.refundTx.toJSON(): '+consumer.refundTx.toJSON());
+            var refund = consumer.refundTx.toJSON();
+            console.log('refund.outputs[0].script: '+refund.outputs[0].script);
+            $('#text-pay').text('Refund tx has already been validated before sending commitment, so no need to validate another time.' + '\n');
+
+            consumer.incrementPaymentBy(duffs);
+
+            console.log(consumer.paymentTx.toString());
+
+            var demoText = 'Sent payment of ' + duffs + ' duffs';
+            console.log(demoText);
+            $('#demoText').text(demoText + '\n');
+            $('#text-pay').append(demoText + '\n');
+            $('#text-pay').append('raw tx:' + '\n');
+            $('#text-pay').append(consumer.paymentTx.toString() + '\n');
+            $('#text-pay').append('amount: ' + consumer.paymentTx.amount + '\n');
+            $('#text-pay').append('sequence: ' + consumer.paymentTx.sequence + '\n');
+            $('#text-pay').append('total paid: ' + consumer.paymentTx.paid + '\n');
+
+            demoText = 'Upon receipt of payment the merchant should check the payment.';
+            $('#demoText').text(demoText + '\n');
+
+
+        } else {
+            console.log('commitment Tx not fully signed');
+        }
+
+    };
+
+    window.checkLastPayment = function () {
+        var self = this;
+        var consumer = this.consumer;
+
+        if(!consumer){
+            console.log("consumer not initialised");
+            return false;
+        }
+        var provider = this.provider;
+        if(!provider){
+            console.log("provider not initialised");
+            return false;
+        }
+
+        var payment = consumer.paymentTx.toString();
+        console.log('payment: ' + payment.toString());
+
+        payment = provider.validPayment(consumer.paymentTx.toObject());
+        console.log('validated payment: ' + payment.toString());
+        $('#text-check-payment').text('validated payment: ' + payment.toString() + '\n');
+
+    };
+
+    window.broadcastPayment = function () {
+        var self = this;
+        var consumer = this.consumer;
+
+        if(!consumer){
+            console.log("consumer not initialised");
+            return false;
+        }
+        var provider = this.provider;
+        if(!provider){
+            console.log("provider not initialised");
+            return false;
+        }
+
+        var payment;
+
+        if (!provider.paymentTx===undefined){
+            if (provider.paymentTx.isFullySigned()) {
+                console.log('paymentTx fully signed.');
+                $('#text-broadcasting-payment').append('paymentTx fully signed.' + '\n');
+                payment = provider.paymentTx;
+            } else {
+                console.log('paymentTx not yet signed by provider. Validating and signing...');
+                $('#text-broadcasting-payment').append('paymentTx not yet signed by provider. Validating and signing...' + '\n');
+                payment = consumer.paymentTx.toString();
+                payment = provider.validPayment(consumer.paymentTx.toObject());
+            }
+        } else {
+            console.log('paymentTx not yet signed by provider. Validating and signing...');
+            $('#text-broadcasting-payment').append('paymentTx not yet signed by provider. Validating and signing...' + '\n');
+            payment = consumer.paymentTx.toString();
+            payment = provider.validPayment(consumer.paymentTx.toObject());
+        }
+
+        console.log('broadcasting payment: ' + payment.toString());
+        $('#text-broadcasting-payment').text('broadcasting payment: ' + '\n' + payment.toString() + '\n');
+
+
+        var insight = new Insight(this.socketurl, this.network);
+
+        insight.broadcast(payment.toString(), function(err, txid) {
+            if (err) {
+                console.log('Error broadcasting');
+            } else {
+                console.log('payment broadcasted as', txid);
+            }
+        });
+
+    };
+
+
+    window.refundUnusedFunds = function() {
+
+        var ret = false;
+        var refundKey = this.refundKey;
+        console.log('Refund key: ' + refundKey);
+
+        var insight = new Insight(this.socketurl, this.network);
+
+        insight.getUtxos(refundKey.toAddress(), function(err, utxo) {
+            var tx = new bitcore.Transaction()
+                .from(utxo)
+                .change(fundingKey.toAddress())
+                .sign(refundKey)
+                .serialize();
+            $('#text-resend').append('refund tx: ' + tx + '\n');
+            insight.broadcast(tx, function(err, txid) {
+                if (err) {
+                    console.log('Error broadcasting');
+                } else {
+                    console.log('unused funds tx broadcasted as', txid);
+                    $('#text-resend').append('unused funds tx broadcasted with txid: ' + txid + '\n');
+                    ret = true;
+                }
+            });
+        });
+
+        return ret;
+    };
+
+
+    window.initSocket = function(address) {
+        var self = this;
+
+        this.socket = io(socketurl);
+        var socket = this.socket;
+        console.log ('socket: ' + socket)
+
+
+        console.log("-socketio-");
+        console.log("listening to: " + address);
+
+        if (address) {
+            var address = address;
+        } else {
+            return false; // inactive socket status
+        }
+
+        console.log('trying to connect to ' + socketurl + '...' );
+
+        socket.on('connect', function() {
+            //socket.emit('subscribe', 'txlock');
+            socket.emit('subscribe', 'bitcoind/addresstxid', [ address ]);
+        });
+
+
+
+        socket.on('bitcoind/addresstxid', function(data) {
+            var consumer = self.consumer;
+
+                console.log('addresstxid: '+ data.txid);
+                console.log('address: '+ data.address);
+
+                // now poll for transaction
+
+                var txid = data.txid;
+
+                var insight = new Insight('http://195.141.143.51:3001', 'testnet');
+
+                console.log('consumer.fundingAddress: '+consumer.fundingAddress);
+
+                insight.getUtxos(consumer.fundingAddress, function(err, utxos) {
+
+                    if(err) {
+                        console.log("err: " + err.toString());
+                        return false;
+                    }
+
+                    console.log('utxos: '+ utxos);
+
+                    consumer.processFunding(utxos);
+                    consumer.commitmentTx._updateChangeOutput();
+
+                    // messageToProvider with refund transaction should be sent to provider to sign
+                    var messageToProvider = consumer.setupRefund().toJSON();
+                    console.log('unsigned refund: ' + consumer.setupRefund().toString());
+                    console.log('commitment: ' + consumer.commitmentTx.toString());
+                    $('#text-unsigned-refund').text(consumer.setupRefund().toString());
+                    $('#text-commitment').text(consumer.commitmentTx.toString());
+
+                    var demoText = 'This channel has been funded and a refund transaction automatically generated.';
+                    demoText = demoText + '\n' + 'This unsigned refund transaction is now sent to the merchant, who needs to sign it.';
+                    demoText = demoText + '\n' + 'This allows for any unused funds to be reclaimed by the consumer without recourse to the merchant should the channel be interrupted.';
+                    $('#demoText').text(demoText + '\n');
+                    console.info(demoText);
+                    socket.removeAllListeners("bitcoind/addresstxid");
+                    jQuery('#btn-refund').prop('disabled', false);
+                    return false; // inactive socket status
+
+                });
+
+        });
+
+        return true; // active socket status
+    };
+
+    window.verifyTransaction = function(opts, txid) {
+        var self = this;
+
+        var i = 0;
+
+        transactionPending(opts);
+
+        var refreshId = setInterval( function() {
+            console.log('polling...');
+
+            self.getTx(txid, function(err, res) {
+
+                console.log(res);
+
+                var conf = parseInt(res.confirmations);
+                var txlock = res.txlock;
+                console.log("txlock: " + txlock);
+
+                if (txlock) {
                     clearInterval(refreshId);;
-
                 }
-                if (res.txid) {
 
-                    if (conf === opts.confirmations) {
+                if (conf > 0) {
+
+                    if (i < opts.pendingNotificationInterval) {
+                        i++;
+                    } else {
+
+                        // TODO - update eCommerce database with confirmation ?
+
+                        transactionPending(res);
+                        i = 0;
+                    }
+
+                    if(res.txlock == 'true') {
+
+                        console.log('txlock detected for txid: ' + res.txid);
+                        console.log(res);
 
                         clearInterval(refreshId);;
+
+                    }
+                    if (res.txid) {
+
+                        if (conf === opts.confirmations) {
+
+                            clearInterval(refreshId);;
+
+                        }
 
                     }
 
                 }
 
-            }
+
+            })
 
 
-        })
+        }, opts.pollingInterval);
 
-
-    }, opts.pollingInterval);
-
-};
-
-    window.getUTXO = function(addr, cb) {
-
-        var opts = {
-            type: "GET",
-            route: "/insight-api-dash/addr/"+addr+"/utxo",
-            data: {
-                format: "json"
-            }
-        };
-
-        this._fetch(opts, cb);
     };
+
 
     window.getTx = function(txid, cb) {
 
@@ -400,25 +497,14 @@ window.verifyTransaction = function(opts, txid) {
     };
 
 
-    window.broadcastTx = function(rawtx, cb) {
-
-        var opts = {
-            type: "POST",
-            route: "/insight-api-dash/tx/send",
-            data: "rawtx="+rawtx
-        };
-
-        this._fetch(opts, cb);
-    };
-
     window._fetch = function(opts,cb) {
         var self = this;
-
+        console.log("data: "+JSON.stringify(opts.data));
         if(opts.type && opts.route && opts.data) {
-            console.log('requesting ' + insightapi + opts.route);
+            console.log('requesting ' + socketurl + opts.route);
             jQuery.ajax({
                 type: opts.type,
-                url: insightapi + opts.route,
+                url: socketurl + opts.route,
                 data: JSON.stringify(opts.data),
                 contentType: "application/json; charset=utf-8",
                 crossDomain: true,
