@@ -30,6 +30,8 @@
             window.fundingKey;
             window.consumer = null;
             window.provider = null;
+            window.refundTx = null;
+
             //window.paymentAddress = 'yMnEpq16VHPPmxnttkD28m6VfdRFdpp8Uq';
 
 
@@ -103,16 +105,13 @@
                 window.broadcastPayment();
                 $('#tabs-demo a[href="#panel-broadcasting-payment"]').tab('show');
                 // now closing channel
-                console.log('Since payment has been broadcast we have to close this channel by refunding unused funds.');
-                $('#text-resend').append('Since payment has been broadcast we have to close this channel by refunding unused funds.' + '\n');
-                if (window.refundUnusedFunds()) {
+                console.log('Since payment has been broadcast this channel is now closed. Unused funds have been spent to the change address which is the refund address.');
+                $('#text-resend').append('Since payment has been broadcast this channel is now closed. Unused funds have been spent to the change address which is the refund address.' + '\n');
                     jQuery('#btn-check-pay').prop('disabled', true);
                     jQuery('#btn-check-payment').prop('disabled', true);
                     jQuery('#broadcasting-payment').prop('disabled', true);
                     jQuery('#btn-resend').prop('disabled', true);
                     $('#tabs-demo a[href="#panel-resend"]').tab('show');
-
-                }
             });
             jQuery('#btn-resend').click(function (event) {
                 event.preventDefault();
