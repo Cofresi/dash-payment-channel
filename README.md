@@ -5,7 +5,7 @@ git clone https://github.com/Cofresi/dash-payment-channel
 
 
 
-in case you want to play around with the payment channel code
+in case you want to play around with the dash payment channel code
 
 cd dash-payment-channel
 

@@ -36,10 +36,15 @@ var signedRefund;
         }
 
         $('#text-consumer').text('funding key: ' + this.refundKey.toString() + '\n' + 'refund key: ' + this.fundingKey.toString() + '\n' + 'commitment key: ' + this.commitmentKey.toString() + '\n');
-        console.log('funding key: ' + this.refundKey.toString());
-        console.log('refund key: ' + this.fundingKey.toString());
-        console.log('commitment key: ' + this.commitmentKey.toString());
-        var demoText = 'Now prepare provider';
+        console.log('funding private key: ' + this.refundKey.toString());
+        console.log('refund private key: ' + this.fundingKey.toString());
+        console.log('commitment private key: ' + this.commitmentKey.toString());
+        var demoText = 'The private keys for the Consumer object have been created.' + '\n';
+        demoText = demoText + "They will generate the public addresses for the funding and the commitment (contract) transactions." + '\n';
+        demoText = demoText + "We also have a final address that we'll use as a 'change' address (sending here any funds that we didn't transact with the Provider). We'll call this the 'refund' address, as it will also be the address where the refund will get to in case the contract is cancelled." + '\n';
+        demoText = demoText + 'Now prepare the provider (merchant)';
+
+
         $('#demoText').text(demoText + '\n');
         return true;
 
@@ -68,7 +73,7 @@ var signedRefund;
             network: network
         });
 
-        var demoText = 'Now that both provider and consumer are set up and we have instantiated our consumer object, we have two ways of funding the channel. The basic one is to send DASH to an address that is provided by the Consumer instance (a private key had been created for this purpose in Step 0. prepare Consumer).';
+        var demoText = 'The important thing to realise is that consumer.providerPublicKey has to be set to provider.getPublicKey() and consumer.providerAddress should be identical to provider.paymentAddress! So these two public keys need to be comunicated by the provider wallet to the consumer wallet before the Consumer Instance can be created. Now that both provider and consumer are set up and we have instantiated our consumer object, we have two ways of funding the channel. The basic one is to send DASH to an address that is provided by the Consumer instance (a private key had been created for this purpose in Step 0. prepare Consumer).';
         demoText = demoText + '\n' + 'To continue, send any amount of tDASH to ' + this.consumer.fundingAddress.toString() + ' to fund the channel';
         $('#demoText').text(demoText + '\n');
         console.info(demoText);
@@ -95,12 +100,12 @@ var signedRefund;
             return false;
         }
 
-        $('#text-provider').text('provider key: ' + this.providerKey.toString() + '\n');
+        $('#text-provider').text('Provider private key: ' + this.providerKey.toString() + '\n');
         console.log('provider private key: ' + this.providerKey.toString());
 
 
-        //create provider
-        //console.log('this.paymentAddress: ' + this.paymentAddress);
+
+
 
 
 
@@ -114,10 +119,13 @@ var signedRefund;
 
 
             console.info('Share this public key with potential consumers: ' + this.provider.getPublicKey());
-        $('#text-provider').append('Share this public key with potential consumers: ' + this.provider.getPublicKey() + '\n');
+        $('#text-provider').append('Share this extended public key with the consumer: ' + this.provider.getPublicKey() + '\n');
+        $('#text-provider').append('Share the payment address derived from this extended public key with the consumer: ' + paymentAddress + '\n');
 
+        $('#text-consumer').append('extended public key from provider: ' + this.provider.getPublicKey() + '\n');
+        $('#text-consumer').append('payment address from provider: ' + paymentAddress + '\n');
 
-        var demoText = 'Now the consumer can set up a payment channel';
+        var demoText = 'Once the consumer wallet has received the extended public key and the payment address from the provider, he can then set up a payment channel';
         $('#demoText').text(demoText + '\n');
 
         return true;
@@ -149,8 +157,8 @@ var signedRefund;
         console.log('messageToConsumer: ' + messageToConsumer);
 
 
-        var demoText = 'The refund transaction has been signed by the merchant and sent back to the consumer.';
-        demoText = demoText + '\n' + 'The consumer should now verify the signed refund Tx from the merchant, before starting to make the first payment';
+        var demoText = 'The refund transaction has been signed by the merchant wallet and sent back to the consumer.';
+        demoText = demoText + '\n' + 'The consumer wallet should now verify the signed refund Tx from the merchant, before starting to make the first payment';
         $('#demoText').text(demoText + '\n');
 
         return true;
@@ -177,7 +185,7 @@ var signedRefund;
 
 
         if (consumer.validateRefund(this.signedRefund.toJSON())) {
-            var demoText = 'Signed refund message successfully validated.' + '\n' + consumer.refundTx.toJSON().outputs[0].script + '\n';
+            var demoText = 'Signed refund message successfully validated.' + '\n' + 'Outputs: ' + consumer.refundTx.toJSON().outputs[0].script + '\n';
             var demoText = demoText + 'Now consumer can broadcast commitment and start sending payments...';
             console.log(demoText);
             $('#demoText').text(demoText + '\n');
@@ -191,7 +199,9 @@ var signedRefund;
                     console.log('commitment Tx ' + consumer.commitmentTx);
                     console.log('broadcasted as' + txid);
                     $('#text-broadcast-commitment').text(consumer.commitmentTx + '\n');
-                    $('#text-broadcast-commitment').append('broadcasted as', txid);
+                    $('#text-broadcast-commitment').append('broadcasted as txid: ', txid + '\n');
+                    $('#text-broadcast-commitment').append('to multisig address: ', consumer.commitmentTx.getAddress(self.network).toString() + '\n');
+                    $('#text-broadcast-commitment').append('outputAmount: ' + consumer.commitmentTx.outputAmount + ' duffs' + '\n');
                 }
             });
 
@@ -381,7 +391,7 @@ var signedRefund;
 
                 var txid = data.txid;
 
-                var insight = new Insight('http://195.141.143.51:3001', 'testnet');
+                var insight = new Insight('https://dev-test.dash.org:3001', 'testnet');
 
                 console.log('consumer.fundingAddress: '+consumer.fundingAddress);
 
@@ -397,7 +407,7 @@ var signedRefund;
                     consumer.processFunding(utxos);
                     consumer.commitmentTx._updateChangeOutput();
 
-                    // messageToProvider with refund transaction should be sent to provider to sign
+                    // messageToProvider with refund TX should be sent to provider to sign
                     var messageToProvider = consumer.setupRefund().toJSON();
                     console.log('unsigned refund: ' + consumer.setupRefund().toString());
                     console.log('commitment: ' + consumer.commitmentTx.toString());
