@@ -23957,7 +23957,7 @@ var signedRefund;
 
         var payment;
 
-        if (!provider.paymentTx===undefined){
+        if (provider.paymentTx){
             if (provider.paymentTx.isFullySigned()) {
                 console.log('paymentTx fully signed.');
                 $('#text-broadcasting-payment').append('paymentTx fully signed.' + '\n');
@@ -23969,10 +23969,7 @@ var signedRefund;
                 payment = provider.validPayment(consumer.paymentTx.toObject());
             }
         } else {
-            console.log('paymentTx not yet signed by provider. Validating and signing...');
-            $('#text-broadcasting-payment').append('paymentTx not yet signed by provider. Validating and signing...' + '\n');
-            payment = consumer.paymentTx.toString();
-            payment = provider.validPayment(consumer.paymentTx.toObject());
+            console.log('paymentTx not initialized');
         }
 
         console.log('broadcasting payment: ' + payment.toString());
