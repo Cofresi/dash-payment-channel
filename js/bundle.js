@@ -23732,8 +23732,9 @@ var signedRefund;
 
     window.createPaymentChannel = function() {
         var self = this;
+        var provider = this.provider;
 
-        this.providerPublicKey = this.provider.getPublicKey();
+        this.providerPublicKey = provider.getPublicKey();
 
         console.log('funding private key: ' + this.refundKey.toString());
         console.log('refund private key: ' + this.fundingKey.toString());
@@ -23807,34 +23808,30 @@ var signedRefund;
             return false;
         }
 
-        this.providerKey = derived.toJSON().privateKey;
+        this.providerKey = new PrivateKey(derived.toJSON().privateKey);
+        var paymentaddress = this.providerKey.toAddress();
+        console.log("paymentaddress: " + paymentaddress);
 
-
-        $('#text-provider').text('Provider private key: ' + this.providerKey.toString() + '\n');
-        console.log('provider private key: ' + this.providerKey.toString());
+        $('#text-provider').text('Provider derived private key: ' + this.providerKey.toString() + '\n');
+        console.log('provider derived private key: ' + this.providerKey.toString());
 
         var provider = new Provider({
             network: network,
-            key: xpriv.toJSON().privateKey
+            paymentAddress: paymentaddress,
+            key: this.providerKey
         });
 
         console.log("key: " + provider.key);
         console.log("getPublicKey: " + provider.getPublicKey());
 
-        var paymentAddress = provider.paymentAddress;
-        console.log("paymentAddress: " + paymentAddress);
-
         this.provider = provider
-
-        console.log('provider payment address: ' + paymentAddress);
-
 
             console.info('Share this public key with potential consumers: ' + this.provider.getPublicKey());
         $('#text-provider').append('Share this extended public key with the consumer: ' + this.provider.getPublicKey() + '\n');
-        $('#text-provider').append('Share the payment address derived from this extended public key with the consumer: ' + paymentAddress + '\n');
+        $('#text-provider').append('Share the payment address derived from this extended public key with the consumer: ' + paymentaddress + '\n');
 
         $('#text-consumer').append('extended public key from provider: ' + this.provider.getPublicKey() + '\n');
-        $('#text-consumer').append('payment address from provider: ' + paymentAddress + '\n');
+        $('#text-consumer').append('payment address from provider: ' + paymentaddress + '\n');
 
         var demoText = 'Once the consumer wallet has received the extended public key and the payment address from the provider, he can then set up a payment channel';
         $('#demoText').text(demoText + '\n');
