@@ -22,7 +22,8 @@
   "dependencies": {
     "bitcore-lib-dash": "^0.13.20",
     "bitcore-channel-dash": "Cofresi/bitcore-channel-dash",
-    "bitcore-explorers-dash": "Cofresi/bitcore-explorers-dash"
+    "bitcore-explorers-dash": "Cofresi/bitcore-explorers-dash",
+    "bitcore-mnemonic-dash": "^1.0.1"
   },
   "author": "Cofresi",
   "license": "ISC",

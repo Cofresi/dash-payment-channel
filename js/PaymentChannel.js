@@ -8,6 +8,9 @@ var Consumer = paymentChannel.Consumer;
 var Provider = paymentChannel.Provider;
 var Commitment = paymentChannel.Transactions.Commitment;
 var Refund = paymentChannel.Transactions.Refund;
+var Mnemonic = require('bitcore-mnemonic-dash');
+var HDprivKey = bitcore.HDPrivateKey
+var HDpubKey = bitcore.HDPublicKey
 var commitmentKey = null;
 var providerKey = null;
 var network = 'testnet';
@@ -19,9 +22,28 @@ var signedRefund;
 
     window.createConsumerKeys = function() {
         var self = this;
+        var code;
 
         if (this.network === 'testnet') {
-            this.refundKey = new bitcore.PrivateKey(bitcore.Networks.testnet);
+
+            code = new Mnemonic($('#consumer_mnemonic').val());
+            console.log("mnemonic:" + code.toString());
+            var xpriv = code.toHDPrivateKey('', this.network);
+            console.log("xpriv:" + xpriv);
+            var derived = xpriv.derive("m/44'/1'/0'");
+            console.log("derived:" + derived);
+
+            // obtain derived HDPublicKey
+            var hdPublicKey = derived.hdPublicKey;
+            console.log("hdPublicKey:" + hdPublicKey);
+            $('#xpub_consumer').text(hdPublicKey);
+
+            var privateKey = derived.toJSON().privateKey;
+            console.log("consumer privateKey:" + privateKey);
+
+
+
+            this.refundKey = new bitcore.PrivateKey(privateKey);
             this.fundingKey = new bitcore.PrivateKey(bitcore.Networks.testnet);
             this.commitmentKey = new bitcore.PrivateKey(bitcore.Networks.testnet);
         }
@@ -35,9 +57,9 @@ var signedRefund;
             return false;
         }
 
-        $('#text-consumer').text('funding key: ' + this.refundKey.toString() + '\n' + 'refund key: ' + this.fundingKey.toString() + '\n' + 'commitment key: ' + this.commitmentKey.toString() + '\n');
-        console.log('funding private key: ' + this.refundKey.toString());
-        console.log('refund private key: ' + this.fundingKey.toString());
+        $('#text-consumer').text('refund key: ' + this.refundKey.toString() + '\n' + 'funding key: ' + this.fundingKey.toString() + '\n' + 'commitment key: ' + this.commitmentKey.toString() + '\n');
+        console.log('refund private key: ' + this.refundKey.toString());
+        console.log('funding private key: ' + this.fundingKey.toString());
         console.log('commitment private key: ' + this.commitmentKey.toString());
         var demoText = 'The private keys for the Consumer object have been created.' + '\n';
         demoText = demoText + "They will generate the public addresses for the funding and the commitment (contract) transactions." + '\n';
@@ -59,7 +81,7 @@ var signedRefund;
         console.log('refund private key: ' + this.fundingKey.toString());
         console.log('commitment private key: ' + this.commitmentKey.toString());
         console.log('provider private key: ' + this.providerKey.toString());
-        console.log('provider getPublicKey: ' + this.provider.getPublicKey());
+        console.log('provider getPublicKey: ' + this.providerPublicKey);
         console.log('provider payment address: ' + this.provider.paymentAddress.toString());
 
         // if using testnet be careful not to forget to construct consumer with the network option, otherwise there will be a mismatch of addresses validating the refund Tx (in consumer.js Consumer.prototype.validateRefund)
@@ -85,8 +107,10 @@ var signedRefund;
 
         var demoText = "Note that 'consumer.providerPublicKey' has to be set to 'provider.getPublicKey()' and 'consumer.providerAddress' should be identical to 'provider.paymentAddress'. These two public keys need to be communicated by the provider wallet to the consumer wallet before the Consumer Instance can be created. Now that both provider and consumer are set up and we have instantiated our consumer object, we have to fund the channel. Send DASH to funding address that is created by the Consumer instance (a private key had been created for this purpose in Step 0. prepare Consumer).";
         demoText = demoText + '\n' + 'To continue, send any amount of tDASH to ' + this.consumer.fundingAddress.toString() + ' to fund the channel';
-        $('#demoText').text(demoText + '\n');
+        $('#demoText').text(demoText);
         console.info(demoText);
+        $('#paymentaddress').text(this.provider.paymentAddress.toString());
+        $('#fundingaddress').text(this.consumer.fundingAddress.toString());
 
         self.initSocket(consumer.fundingAddress.toString())
 
@@ -98,9 +122,24 @@ var signedRefund;
 
     window.createProviderKey = function() {
         var self = this;
+        var code;
+        var privateKey;
 
         if (this.network === 'testnet') {
-            this.providerKey = new bitcore.PrivateKey(bitcore.Networks.testnet);
+
+            code = new Mnemonic($('#provider_mnemonic').val());
+            console.log("mnemonic:" + code.toString());
+            var xpriv = code.toHDPrivateKey('', this.network);
+            console.log("xpriv:" + xpriv);
+            var derived = xpriv.derive("m/44'/1'/0'");
+            console.log("derived:" + derived);
+
+            // obtain derived HDPublicKey
+            var hdPublicKey = derived.hdPublicKey;
+            console.log("hdPublicKey:" + hdPublicKey);
+            $('#xpub_provider').text(hdPublicKey);
+
+
         }
         else if (this.network === 'mainnet') {
             this.providerKey = new bitcore.PrivateKey(bitcore.Networks.mainnet);
@@ -110,21 +149,25 @@ var signedRefund;
             return false;
         }
 
+        this.providerKey = derived.toJSON().privateKey;
+
+
         $('#text-provider').text('Provider private key: ' + this.providerKey.toString() + '\n');
         console.log('provider private key: ' + this.providerKey.toString());
 
-
-
-
-
-
-
-        this.provider = new Provider({
-            network: network
+        var provider = new Provider({
+            network: network,
+            key: xpriv.toJSON().privateKey
         });
 
-        var paymentAddress = this.provider.getPublicKey().toAddress(this.network);
-        this.provider.paymentAddress = paymentAddress;
+        console.log("key: " + provider.key);
+        console.log("getPublicKey: " + provider.getPublicKey());
+
+        var paymentAddress = provider.paymentAddress;
+        console.log("paymentAddress: " + paymentAddress);
+
+        this.provider = provider
+
         console.log('provider payment address: ' + paymentAddress);
 
 
@@ -157,10 +200,13 @@ var signedRefund;
             return false;
         }
 
-        console.log("consumer.setupRefund().toString()" + consumer.setupRefund().toString());
+        console.log("consumer.setupRefund().toString(): " + consumer.setupRefund().toString());
+
+        console.log("provider.key: " + provider.key);
 
         var messageToConsumer = provider.signRefund(consumer.setupRefund().toJSON());
         this.signedRefund = messageToConsumer;
+        console.log("signed refund: " + messageToConsumer);
         this.refundTx = new Refund (provider.signRefund(consumer.setupRefund().toJSON()));
 
         $('#text-signed-refund').text(messageToConsumer + '\n');
@@ -207,10 +253,12 @@ var signedRefund;
                 } else {
                     console.log('commitment Tx ' + consumer.commitmentTx);
                     console.log('broadcasted as: ' + txid);
+                    var multisigaddr = consumer.commitmentTx.getAddress(self.network).toString();
                     $('#text-broadcast-commitment').text(consumer.commitmentTx + '\n');
                     $('#text-broadcast-commitment').append('broadcasted as txid: ', txid + '\n');
-                    $('#text-broadcast-commitment').append('to multisig address: ', consumer.commitmentTx.getAddress(self.network).toString() + '\n');
+                    $('#text-broadcast-commitment').append('to multisig address: ', multisigaddr + '\n');
                     $('#text-broadcast-commitment').append('outputAmount: ' + consumer.commitmentTx.outputAmount + ' duffs' + '\n');
+                    $('#multisig').text(multisigaddr);
                 }
             });
 
@@ -495,7 +543,7 @@ var signedRefund;
 
                 var txid = data.txid;
 
-                var insight = new Insight('https://dev-test.dash.org:3001', 'testnet');
+                var insight = new Insight('http://155.94.181.166:3001', 'testnet');
 
                 console.log('consumer.fundingAddress: '+consumer.fundingAddress);
 
@@ -513,6 +561,9 @@ var signedRefund;
 
                     // messageToProvider with refund TX should be sent to provider to sign
                     var messageToProvider = consumer.setupRefund().toJSON();
+                    var refundaddress = consumer.refundAddress.toString();
+                    console.log('refundaddress: ' + refundaddress);
+                    $('#refundaddress').text(refundaddress);
                     console.log('unsigned refund: ' + consumer.setupRefund().toString());
                     console.log('commitment: ' + consumer.commitmentTx.toString());
                     $('#text-unsigned-refund').text(consumer.setupRefund().toString());
@@ -601,7 +652,7 @@ var signedRefund;
 
         var opts = {
             type: "GET",
-            route: "/insight-api-dash/tx/"+txid,
+            route: "/api/tx/"+txid,
             data: {
                 format: "json"
             }

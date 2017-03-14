@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/themes/smoothness/jquery-ui.css">
-    <script src="https://dev-test.dash.org:3001/socket.io/socket.io.js"></script>
+    <script src="https://insight.proposal.dash.org/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-3.1.0.js" integrity="sha256-slogkvB1K3VOkzAI8QITxV3VzpOnkeNVsKvtkYLMjfk=" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="js/bundle.js"></script>
@@ -25,7 +25,7 @@
         $(document).ready(function(){
 
             window.network = 'testnet';
-            window.socketurl='https://dev-test.dash.org:3001';
+            window.socketurl='http://155.94.181.166:3001';
             window.refundKey;
             window.fundingKey;
             window.consumer = null;
@@ -306,18 +306,61 @@
             <textarea class="form-control" id="demoText" rows="6" placeholder="Prepare Consumer"></textarea>
 
             <div class="row top-buffer">
-                <div class="col col-md-6">
-                    <label for="xpub">Extended BIP32 Public Key:</label>
-                    <textarea disabled class="form-control" id="xpub" rows="1" placeholder="tpub..."></textarea>
+                <div class="col col-md-12">
+                    <label for="consumer_mnemonic">Consumer: Enter BIP32 HD mnemonic for testing on Copay:</label>
+                    <textarea  class="form-control" id="consumer_mnemonic" rows="1" placeholder="crazy horse battery staple">side siege leader screen glad forum quiz puppy mistake problem stamp fatigue</textarea>
+                </div>
+            </div>
+
+            <div class="row top-buffer">
+                <div class="col col-md-12">
+                    <label for="provider_mnemonic">Provider: Enter BIP32 HD mnemonic for testing on Copay:</label>
+                    <textarea  class="form-control" id="provider_mnemonic" rows="1" placeholder="crazy horse battery staple">employ found anxiety remove stomach payment program blouse shoot item slender hat</textarea>
+                </div>
+            </div>
+
+            <div class="row top-buffer">
+                <div class="col col-md-14">
+                    <label for="xpub_consumer">Derived ext. Consumer Public Key:</label>
+                    <textarea disabled class="form-control" id="xpub_consumer" rows="1" placeholder="tpub..."></textarea>
+                </div>
+            </div>
+
+            <div class="row top-buffer">
+                <div class="col col-md-14">
+                    <label for="xpub_provider">Derived ext. Provider Public Key:</label>
+                    <textarea disabled class="form-control" id="xpub_provider" rows="1" placeholder="tpub..."></textarea>
                 </div>
             </div>
 
             <div class="row top-buffer">
                 <div class="col col-md-6">
-                    <label for="xpub">Provider Payment Address:</label>
-                    <textarea disabled class="form-control" id="paymentaddress" rows="1" placeholder="yNCjefEpYxzh5NH1n8WY1rZ6HRNCRkj58R">yNCjefEpYxzh5NH1n8WY1rZ6HRNCRkj58R</textarea>
+                    <label for="fundingaddress">Consumer Funding Address:</label>
+                    <textarea disabled class="form-control" id="fundingaddress" rows="1" placeholder="nothing yet..."></textarea>
                 </div>
             </div>
+
+            <div class="row top-buffer">
+                <div class="col col-md-6">
+                    <label for="paymentaddress">Provider Payment Address:</label>
+                    <textarea disabled class="form-control" id="paymentaddress" rows="1" placeholder="nothing yet..."></textarea>
+                </div>
+            </div>
+
+            <div class="row top-buffer">
+                <div class="col col-md-6">
+                    <label for="multisig">Commitment Multisig Address:</label>
+                    <textarea disabled class="form-control" id="multisig" rows="1" placeholder="nothing yet..."></textarea>
+                </div>
+            </div>
+
+            <div class="row top-buffer">
+                <div class="col col-md-6">
+                    <label for="refundaddress">Consumer Refund Address:</label>
+                    <textarea disabled class="form-control" id="refundaddress" rows="1" placeholder="nothing yet..."></textarea>
+                </div>
+            </div>
+
         </div>
 
         <div class="col-lg-2 col-md-2 ">
