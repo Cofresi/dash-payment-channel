@@ -2,7 +2,7 @@
 This is a demo webpage to illustrate the workings of bitcore-channel-dash
 https://github.com/Cofresi/bitcore-channel-dash
 
-sould run as is in any web directory:
+should run as is in any web directory:
 
 git clone https://github.com/Cofresi/dash-payment-channel
 
