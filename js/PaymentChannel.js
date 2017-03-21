@@ -31,7 +31,11 @@ var signedRefund;
             var xpriv = code.toHDPrivateKey('', this.network);
             console.log("xpriv:" + xpriv);
             var derived = xpriv.derive("m/44'/1'/0'");
+            var derived1 = xpriv.derive("m/44'/1'/1'");
+            var derived2 = xpriv.derive("m/44'/1'/2'");
             console.log("derived:" + derived);
+            console.log("derived1:" + derived);
+            console.log("derived2:" + derived);
 
             // obtain derived HDPublicKey
             var hdPublicKey = derived.hdPublicKey;
@@ -40,7 +44,6 @@ var signedRefund;
 
             var privateKey = derived.toJSON().privateKey;
             console.log("consumer privateKey:" + privateKey);
-
 
 
             this.refundKey = new bitcore.PrivateKey(privateKey);
@@ -75,11 +78,12 @@ var signedRefund;
     window.createPaymentChannel = function() {
         var self = this;
         var provider = this.provider;
+        var network = this.network;
 
         this.providerPublicKey = provider.getPublicKey();
 
-        console.log('funding private key: ' + this.refundKey.toString());
-        console.log('refund private key: ' + this.fundingKey.toString());
+        console.log('refund private key: ' + this.refundKey.toString());
+        console.log('funding private key: ' + this.fundingKey.toString());
         console.log('commitment private key: ' + this.commitmentKey.toString());
         console.log('provider private key: ' + this.providerKey.toString());
         console.log('provider getPublicKey: ' + this.providerPublicKey);
@@ -89,7 +93,7 @@ var signedRefund;
         this.consumer = new Consumer({
             fundingKey: this.fundingKey,
             refundKey: this.refundKey,
-            refundAddress: this.refundKey.toAddress(),
+            refundAddress: this.refundKey.toAddress(network),
             commitmentKey: this.commitmentKey,
             providerPublicKey: this.providerPublicKey,
             providerAddress: this.provider.paymentAddress,
@@ -151,7 +155,7 @@ var signedRefund;
         }
 
         this.providerKey = new PrivateKey(derived.toJSON().privateKey);
-        var paymentaddress = this.providerKey.toAddress();
+        var paymentaddress = this.providerKey.toAddress(this.network);
         console.log("paymentaddress: " + paymentaddress);
 
         $('#text-provider').text('Provider derived private key: ' + this.providerKey.toString() + '\n');
@@ -197,14 +201,12 @@ var signedRefund;
             return false;
         }
 
-        console.log("consumer.setupRefund().toString(): " + consumer.setupRefund().toString());
-
         console.log("provider.key: " + provider.key);
 
         var messageToConsumer = provider.signRefund(consumer.setupRefund().toJSON());
         this.signedRefund = messageToConsumer;
         console.log("signed refund: " + messageToConsumer);
-        this.refundTx = new Refund (provider.signRefund(consumer.setupRefund().toJSON()));
+        //this.refundTx = new Refund (provider.signRefund(consumer.setupRefund().toJSON()));
 
         $('#text-signed-refund').text(messageToConsumer + '\n');
         console.log('messageToConsumer: ' + messageToConsumer);
@@ -221,22 +223,24 @@ var signedRefund;
 
     window.broadcastCommitment = function() {
         var self = this;
-        var consumer = this.consumer;
+        var consumer = self.consumer;
 
         if(!consumer){
             console.log("consumer not initialised");
             return false;
         }
-        var provider = this.provider;
+        var provider = self.provider;
         if(!provider){
             console.log("provider not initialised");
             return false;
         }
 
-        console.log("signed Refund: " + this.signedRefund);
-        console.log("provider.signRefund: " + provider.signRefund(consumer.setupRefund().toJSON()));
+        var signedRefund = provider.signRefund(consumer.setupRefund().toJSON());
+        console.log("signed Refund: " + signedRefund);
+        console.log('signed Refund TX output: ' + signedRefund.outputs[0].script);
 
-        if (consumer.validateRefund(this.signedRefund.toJSON())) {
+        //important: signedRefund must be JSON-serialized otherwise there is an error validating in consumer.js
+        if (consumer.validateRefund(signedRefund.toJSON())) {
             var demoText = 'Signed refund message successfully validated.' + '\n';
             var demoText = demoText + 'Now consumer can broadcast commitment and start sending payments...';
             console.log(demoText);
@@ -542,7 +546,7 @@ var signedRefund;
 
                 var insight = new Insight('http://155.94.181.166:3001', 'testnet');
 
-                console.log('consumer.fundingAddress: '+consumer.fundingAddress);
+                console.log('consumer.fundingAddress: ' + consumer.fundingAddress);
 
                 insight.getUtxos(consumer.fundingAddress, function(err, utxos) {
 
