@@ -23689,11 +23689,11 @@ var signedRefund;
             var xpriv = code.toHDPrivateKey('', this.network);
             console.log("xpriv:" + xpriv);
             var derived = xpriv.derive("m/44'/1'/0'");
-            var derived1 = xpriv.derive("m/44'/1'/1'");
-            var derived2 = xpriv.derive("m/44'/1'/2'");
+            var derived2 = xpriv.derive("m/44'/0'");
+            var derived3 = xpriv.derive("m/44'");
             console.log("derived:" + derived);
-            console.log("derived1:" + derived);
             console.log("derived2:" + derived);
+            console.log("derived3:" + derived);
 
             // obtain derived HDPublicKey
             var hdPublicKey = derived.hdPublicKey;
