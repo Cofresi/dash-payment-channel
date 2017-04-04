@@ -23689,11 +23689,11 @@ var signedRefund;
             var xpriv = code.toHDPrivateKey('', this.network);
             console.log("xpriv:" + xpriv);
             var derived = xpriv.derive("m/44'/1'/0'");
-            var derived2 = xpriv.derive("m/44'/0'");
-            var derived3 = xpriv.derive("m/44'");
+            //var derived2 = xpriv.derive("m/44'/0'");
+            //var derived3 = xpriv.derive("m/44'");
             console.log("derived:" + derived);
-            console.log("derived2:" + derived);
-            console.log("derived3:" + derived);
+            //console.log("derived2:" + derived);
+            //console.log("derived3:" + derived);
 
             // obtain derived HDPublicKey
             var hdPublicKey = derived.hdPublicKey;
@@ -24040,7 +24040,7 @@ var signedRefund;
 
     window.refundUnusedFunds = function() {
         var self = this;
-        var consumer = this.consumer;
+        var consumer = self.consumer;
         var ret = false;
         var refundKey = this.refundKey;
         console.log('Refund key: ' + refundKey);
@@ -24067,19 +24067,25 @@ var signedRefund;
 
 
         var insight = new Insight(this.socketurl, this.network);
-        console.log("now broadcasting refund tx");
+        console.log("now getting utxo");
 
         insight.getUtxos(consumer.commitmentTx.getAddress(), function(err, utxos) {
             console.log("utxos: " + utxos);
+            console.log("consumer.fundingKey.toAddress(): " + consumer.fundingKey.toAddress());
+            console.log("refundTx: " + consumer.refundTx);
             //tx.from(utxo);
 
+            var tx = new Refund(consumer.refundTx);
+
+            /*
             var tx = new bitcore.Transaction()
                 .from(utxos)
-                .change(consumer.fundingAddress)
+                .change(consumer.fundingKey.toAddress())
                 .sign(consumer.refundKey)
-                .serialize(true);
+                .serialize();
+            */
 
-            //console.log("fee: " + tx.getFee());
+            console.log("fee: " + tx.getFee());
             console.log("now broadcasting refund tx");
             insight.broadcast(tx, function(err, txid) {
                 if (err) {
@@ -24202,7 +24208,7 @@ var signedRefund;
 
                 var txid = data.txid;
 
-                var insight = new Insight('http://155.94.181.166:3001', 'testnet');
+                var insight = new Insight('https://dev-test.dash.org:3001', 'testnet');
 
                 console.log('consumer.fundingAddress: ' + consumer.fundingAddress);
 
