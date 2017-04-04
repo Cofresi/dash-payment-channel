@@ -26,6 +26,7 @@
 
             window.network = 'testnet';
             window.socketurl='https://dev-test.dash.org:3001';
+            //window.socketurl='http://195.141.143.51:3001';
             window.refundKey;
             window.fundingKey;
             window.consumer = null;
@@ -115,7 +116,7 @@
             });
             jQuery('#btn-resend').click(function (event) {
                 event.preventDefault();
-                // resending unused funds before payment has been broadcast
+                // refund before payment has been broadcast
                 console.log('We close this channel before payment has been broadcast by refunding unused funds.');
                 $('#text-resend').append('We close this channel before payment has been broadcast by refunding unused funds.' + '\n');
                 if (window.refundUnusedFunds()) {
@@ -198,7 +199,7 @@
                     6: Broadcasting Payment
                 </button>
                 <button id="btn-resend" class="btn btn-primary btn-md text-left" type="button">
-                    7: Refund Unused Funds
+                    7: Refund
                 </button>
 
             </div>
@@ -235,7 +236,7 @@
                         <a href="#panel-broadcasting-payment" data-toggle="tab">Broadcasting Payment</a>
                     </li>
                     <li>
-                        <a href="#panel-resend" data-toggle="tab">Resend As Funds</a>
+                        <a href="#panel-resend" data-toggle="tab">Refund</a>
                     </li>
                 </ul>
 
@@ -277,7 +278,7 @@
                         <textarea class="form-control" id="text-broadcasting-payment" rows="15" placeholder="nothing yet..."></textarea>
                     </div>
                     <div class="tab-pane" id="panel-resend">
-                        <label for="text-resend">Refund Unused Funds:</label>
+                        <label for="text-resend">Refund:</label>
                         <textarea class="form-control" id="text-resend" rows="15" placeholder="nothing yet..."></textarea>
                     </div>
                 </div>

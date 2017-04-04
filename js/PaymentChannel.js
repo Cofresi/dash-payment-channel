@@ -250,7 +250,7 @@ var signedRefund;
 
             insight.broadcast(consumer.commitmentTx, function(err, txid) {
                 if (err) {
-                    console.log('Error broadcasting');
+                    console.log('Error broadcasting: ' + err);
                 } else {
                     console.log('commitment Tx ' + consumer.commitmentTx);
                     console.log('broadcasted as: ' + txid);
@@ -399,23 +399,8 @@ var signedRefund;
             console.log("consumer not initialised");
             return false;
         }
-        //console.log("refund address: " + consumer.refundAddress.toString());
-        //console.log("refund fee: " + consumer.refundTx.getFee());
 
         $('#text-resend').append('refund tx: ' + consumer.refundTx.toString() + '\n');
-
-        //var tx = this.refundTx;
-        //tx._fee = 10000;
-        //tx.serialize(true)
-        //console.log('tx.isCoinbase(): ' + tx.isCoinbase());
-        //console.log('tx fee: ' + tx.getFee());
-        //console.log('tx._estimateFee: ' + tx._estimateFee());
-
-        //this.consumer.refundTx.fee(1000);
-
-
-        //console.log("consumer.refundTx.to.address: " + consumer.refundTx.to.address);
-
 
         var insight = new Insight(this.socketurl, this.network);
         console.log("now getting utxo");
@@ -424,9 +409,8 @@ var signedRefund;
             console.log("utxos: " + utxos);
             console.log("consumer.fundingKey.toAddress(): " + consumer.fundingKey.toAddress());
             console.log("refundTx: " + consumer.refundTx);
-            //tx.from(utxo);
 
-            var tx = new Refund(consumer.refundTx);
+            var tx = consumer.refundTx.toString();
 
             /*
             var tx = new bitcore.Transaction()
@@ -436,88 +420,20 @@ var signedRefund;
                 .serialize();
             */
 
-            console.log("fee: " + tx.getFee());
+            //console.log('tx: ' + tx);
+            //console.log("fee: " + tx.getFee());
+
             console.log("now broadcasting refund tx");
             insight.broadcast(tx, function(err, txid) {
                 if (err) {
-                    console.log('Error broadcasting');
+                    console.log('Error broadcasting: ' + err);
                 } else {
                     console.log('unused funds tx broadcasted as ', txid);
-                    $('#text-resend').append('unused funds tx broadcasted with txid: ' + txid + '\n');
+                    $('#text-resend').append('refund tx broadcasted with txid: ' + txid + '\n');
                     ret = true;
                 }
             });
         });
-
-        /*
-        if (tx.hasAllUtxoInfo()) {
-            console.log("lacks utxo info");
-            insight.getUtxos(consumer.refundAddress.toString(), function(err, utxo) {
-                console.log("utxo: " + utxo);
-               //tx.from(utxo);
-
-                var tx = new bitcore.Transaction()
-                    .from(utxo)
-                    .change(consumer.fundingAddress)
-                    .sign(consumer.refundKey)
-                    .serialize();
-
-                console.log("fee: " + tx.getFee());
-                console.log("now broadcasting refund tx");
-                insight.broadcast(tx, function(err, txid) {
-                    if (err) {
-                        console.log('Error broadcasting');
-                    } else {
-                        console.log('unused funds tx broadcasted as ', txid);
-                        $('#text-resend').append('unused funds tx broadcasted with txid: ' + txid + '\n');
-                        ret = true;
-                    }
-                });
-            });
-        } else {
-            console.log("has all utxo info");
-
-
-
-
-            var tx = new bitcore.Transaction()
-                .fee(1000)
-                .change(fundingKey.toAddress())
-                .sign(refundKey)
-                .serialize();
-
-
-            insight.broadcast(tx, function(err, txid) {
-                if (err) {
-                    console.log('Error broadcasting');
-                } else {
-                    console.log('unused funds tx broadcasted as ', txid);
-                    $('#text-resend').append('unused funds tx broadcasted with txid: ' + txid + '\n');
-                    ret = true;
-                }
-            });
-
-
-        }
-        */
-
-        /*
-        insight.getUtxos(tx.getAddress(), function(err, utxo) {
-            console.log("utxo: " + utxo);
-            tx.from(utxo);
-            console.log("fee: " + tx.getFee());
-            console.log("now broadcasting refund tx");
-            insight.broadcast(tx, function(err, txid) {
-                if (err) {
-                    console.log('Error broadcasting');
-                } else {
-                    console.log('unused funds tx broadcasted as ', txid);
-                    $('#text-resend').append('unused funds tx broadcasted with txid: ' + txid + '\n');
-                    ret = true;
-                }
-            });
-        });
-        */
 
         return ret;
     };
@@ -560,6 +476,7 @@ var signedRefund;
                 var txid = data.txid;
 
                 var insight = new Insight('https://dev-test.dash.org:3001', 'testnet');
+                //var insight = new Insight('http://195.141.143.51:3001', 'testnet');
 
                 console.log('consumer.fundingAddress: ' + consumer.fundingAddress);
 

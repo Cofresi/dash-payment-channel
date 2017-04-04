@@ -23908,7 +23908,7 @@ var signedRefund;
 
             insight.broadcast(consumer.commitmentTx, function(err, txid) {
                 if (err) {
-                    console.log('Error broadcasting');
+                    console.log('Error broadcasting: ' + err);
                 } else {
                     console.log('commitment Tx ' + consumer.commitmentTx);
                     console.log('broadcasted as: ' + txid);
@@ -23984,10 +23984,19 @@ var signedRefund;
         var payment = consumer.paymentTx.toString();
         console.log('payment: ' + payment.toString());
 
+        //check if payment is valid
         payment = provider.validPayment(consumer.paymentTx.toObject());
         console.log('validated payment: ' + payment.toString());
-        $('#text-check-payment').text('validated payment: ' + payment.toString() + '\n');
+        if (payment) {
+            //TODO: check if payment is correct amount in duffs
+            /*
+            if (provider.currentAmount === 1000000) {
+                console.log('correct amount!');
+            }
+            */
+            $('#text-check-payment').text('validated payment: ' + payment.toString() + '\n');
 
+        }
     };
 
     window.broadcastPayment = function () {
@@ -24075,7 +24084,10 @@ var signedRefund;
             console.log("refundTx: " + consumer.refundTx);
             //tx.from(utxo);
 
-            var tx = new Refund(consumer.refundTx);
+            //var tx = new Refund(consumer.refundTx);
+                //.serialize(true);
+
+            var tx = consumer.refundTx.toString();
 
             /*
             var tx = new bitcore.Transaction()
@@ -24085,14 +24097,15 @@ var signedRefund;
                 .serialize();
             */
 
-            console.log("fee: " + tx.getFee());
+            console.log('tx: ' + tx);
+            //console.log("fee: " + tx.getFee());
             console.log("now broadcasting refund tx");
             insight.broadcast(tx, function(err, txid) {
                 if (err) {
-                    console.log('Error broadcasting');
+                    console.log('Error broadcasting: ' + err);
                 } else {
                     console.log('unused funds tx broadcasted as ', txid);
-                    $('#text-resend').append('unused funds tx broadcasted with txid: ' + txid + '\n');
+                    $('#text-resend').append('refund tx broadcasted with txid: ' + txid + '\n');
                     ret = true;
                 }
             });
@@ -24209,6 +24222,7 @@ var signedRefund;
                 var txid = data.txid;
 
                 var insight = new Insight('https://dev-test.dash.org:3001', 'testnet');
+                //var insight = new Insight('http://195.141.143.51:3001', 'testnet');
 
                 console.log('consumer.fundingAddress: ' + consumer.fundingAddress);
 
@@ -24964,7 +24978,7 @@ Insight.prototype.broadcast = function(transaction, callback) {
   if (transaction instanceof Transaction) {
     transaction = transaction.serialize();
   }
-
+  console.log('transaction: ' + transaction);
   this.requestPost('/insight-api-dash/tx/send', {
     rawtx: transaction
   }, function(err, res, body) {
